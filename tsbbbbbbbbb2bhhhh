@@ -1,0 +1,869 @@
+-- TSB NOVE HUB v4 (Yükleme Ekranı + Gelişmiş FPS)
+-- YÜKLEME EKRANI
+local LoadingGui = Instance.new("ScreenGui")
+LoadingGui.Name = "TSB_Loading"
+LoadingGui.ResetOnSpawn = false
+LoadingGui.IgnoreGuiInset = true
+LoadingGui.DisplayOrder = 999
+LoadingGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+local LoadingBg = Instance.new("Frame", LoadingGui)
+LoadingBg.Size = UDim2.new(1, 0, 1, 0)
+LoadingBg.BackgroundColor3 = Color3.fromRGB(8, 8, 15)
+LoadingBg.BorderSizePixel = 0
+
+local LoadingFrame = Instance.new("Frame", LoadingBg)
+LoadingFrame.Size = UDim2.new(0, 400, 0, 200)
+LoadingFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+LoadingFrame.BorderSizePixel = 0
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 12)
+
+local LoadingStroke = Instance.new("UIStroke", LoadingFrame)
+LoadingStroke.Thickness = 2
+LoadingStroke.Color = Color3.fromRGB(0, 180, 255)
+
+-- Animasyonlu çerçeve
+game:GetService("RunService").RenderStepped:Connect(function()
+    if LoadingStroke and LoadingStroke.Parent then
+        LoadingStroke.Color = Color3.fromHSV(tick() % 5 / 5, 0.8, 1)
+    end
+end)
+
+local LoadingTitle = Instance.new("TextLabel", LoadingFrame)
+LoadingTitle.Size = UDim2.new(1, 0, 0, 60)
+LoadingTitle.Position = UDim2.new(0, 0, 0, 20)
+LoadingTitle.BackgroundTransparency = 1
+LoadingTitle.Text = "NOVE HUB"
+LoadingTitle.TextColor3 = Color3.fromRGB(0, 200, 255)
+LoadingTitle.Font = Enum.Font.GothamBlack
+LoadingTitle.TextSize = 42
+LoadingTitle.TextXAlignment = Enum.TextXAlignment.Center
+
+local LoadingSubtitle = Instance.new("TextLabel", LoadingFrame)
+LoadingSubtitle.Size = UDim2.new(1, 0, 0, 25)
+LoadingSubtitle.Position = UDim2.new(0, 0, 0, 78)
+LoadingSubtitle.BackgroundTransparency = 1
+LoadingSubtitle.Text = "TSB ULTIMATE"
+LoadingSubtitle.TextColor3 = Color3.fromRGB(200, 200, 220)
+LoadingSubtitle.Font = Enum.Font.GothamBold
+LoadingSubtitle.TextSize = 14
+LoadingSubtitle.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Progress Bar
+local BarBg = Instance.new("Frame", LoadingFrame)
+BarBg.Size = UDim2.new(0, 320, 0, 8)
+BarBg.Position = UDim2.new(0.5, -160, 0, 120)
+BarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+BarBg.BorderSizePixel = 0
+Instance.new("UICorner", BarBg).CornerRadius = UDim.new(1, 0)
+
+local BarFill = Instance.new("Frame", BarBg)
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+BarFill.BorderSizePixel = 0
+Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
+
+local LoadingStatus = Instance.new("TextLabel", LoadingFrame)
+LoadingStatus.Size = UDim2.new(1, 0, 0, 20)
+LoadingStatus.Position = UDim2.new(0, 0, 0, 145)
+LoadingStatus.BackgroundTransparency = 1
+LoadingStatus.Text = "Yükleniyor..."
+LoadingStatus.TextColor3 = Color3.fromRGB(150, 150, 180)
+LoadingStatus.Font = Enum.Font.GothamMedium
+LoadingStatus.TextSize = 12
+LoadingStatus.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Progress animasyonu
+local progress = 0
+local statuses = {
+    "Servisler başlatılıyor...",
+    "ESP sistemi hazırlanıyor...",
+    "Aimlock yükleniyor...",
+    "Ayarlar yükleniyor...",
+    "Optimize ediliyor...",
+    "Hazır!"
+}
+local currentStatus = 1
+
+task.spawn(function()
+    while progress < 1 do
+        task.wait(0.03)
+        progress = math.min(1, progress + math.random() * 0.04)
+        BarFill:TweenSize(UDim2.new(progress, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+        local newStatus = math.min(#statuses, math.floor(progress * #statuses) + 1)
+        if newStatus ~= currentStatus then
+            currentStatus = newStatus
+            LoadingStatus.Text = statuses[newStatus]
+        end
+    end
+    task.wait(0.3)
+    -- Kapanma animasyonu
+    LoadingFrame:TweenPosition(UDim2.new(0.5, -200, 1.5, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.5, true)
+    task.wait(0.5)
+    LoadingGui:Destroy()
+end)
+
+task.wait(2) -- Yükleme ekranı görünsün
+
+-- ==================== SCRIPT BAŞLANGIÇ ====================
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TeleportService = game:GetService("TeleportService")
+local Lighting = game:GetService("Lighting")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+if LocalPlayer.PlayerGui:FindFirstChild("TSB_NoveHub") then
+    LocalPlayer.PlayerGui.TSB_NoveHub:Destroy()
+end
+
+-- ==================== AYARLAR ====================
+local Settings = {
+    WalkSpeed = 32,
+    JumpPower = 60,
+    FOV = 70,
+    MaxZoom = 128,
+    Color = Color3.fromRGB(0, 180, 255),
+    ESPFill = Color3.fromRGB(255, 50, 50),
+    ESPOutline = Color3.fromRGB(255, 100, 100),
+    ESPText = Color3.fromRGB(255, 80, 80),
+    ESPFillTransparency = 0.5,
+}
+
+local ESPColorPresets = {
+    {name = "Kırmızı", fill = Color3.fromRGB(255, 50, 50), outline = Color3.fromRGB(255, 100, 100), text = Color3.fromRGB(255, 80, 80)},
+    {name = "Mavi", fill = Color3.fromRGB(50, 150, 255), outline = Color3.fromRGB(100, 180, 255), text = Color3.fromRGB(100, 180, 255)},
+    {name = "Yeşil", fill = Color3.fromRGB(50, 255, 80), outline = Color3.fromRGB(100, 255, 120), text = Color3.fromRGB(100, 255, 120)},
+    {name = "Turuncu", fill = Color3.fromRGB(255, 140, 30), outline = Color3.fromRGB(255, 170, 60), text = Color3.fromRGB(255, 170, 60)},
+    {name = "Mor", fill = Color3.fromRGB(180, 50, 255), outline = Color3.fromRGB(210, 100, 255), text = Color3.fromRGB(210, 100, 255)},
+    {name = "Sarı", fill = Color3.fromRGB(255, 255, 50), outline = Color3.fromRGB(255, 255, 100), text = Color3.fromRGB(255, 255, 100)},
+    {name = "Beyaz", fill = Color3.fromRGB(255, 255, 255), outline = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(255, 255, 255)},
+    {name = "Siyah", fill = Color3.fromRGB(20, 20, 20), outline = Color3.fromRGB(60, 60, 60), text = Color3.fromRGB(60, 60, 60)},
+}
+
+-- ==================== GUI ====================
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "TSB_NoveHub"
+Gui.ResetOnSpawn = false
+Gui.Parent = LocalPlayer.PlayerGui
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 240, 0, 380)
+Main.Position = UDim2.new(0.05, 0, 0.2, 0)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+Main.Active = true
+Main.Parent = Gui
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Thickness = 2
+MainStroke.Color = Settings.Color
+
+local TitleBar = Instance.new("TextButton")
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+TitleBar.Text = " ➖ NOVE HUB TSB"
+TitleBar.TextColor3 = Color3.new(1, 1, 1)
+TitleBar.Font = Enum.Font.GothamBold
+TitleBar.TextSize = 12
+TitleBar.Parent = Main
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 10)
+
+RunService.RenderStepped:Connect(function()
+    TitleBar.TextColor3 = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+end)
+
+-- Sürükleme
+local dragging, dragStart, startPos
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = input.Position; startPos = Main.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+-- Kapatma / Float
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+CloseBtn.Position = UDim2.new(1, -28, 0, 3)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 12
+CloseBtn.Parent = TitleBar
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+
+local FloatBtn = Instance.new("TextButton")
+FloatBtn.Size = UDim2.new(0, 50, 0, 50)
+FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
+FloatBtn.BackgroundColor3 = Color3.fromRGB(14, 14, 22)
+FloatBtn.Text = "N"
+FloatBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
+FloatBtn.Font = Enum.Font.GothamBlack
+FloatBtn.TextSize = 22
+FloatBtn.Visible = false
+FloatBtn.Parent = Gui
+Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false; FloatBtn.Visible = true
+end)
+FloatBtn.MouseButton1Click:Connect(function()
+    Main.Visible = true; FloatBtn.Visible = false
+end)
+
+-- İçerik
+local Container = Instance.new("ScrollingFrame")
+Container.Size = UDim2.new(1, 0, 1, -30)
+Container.Position = UDim2.new(0, 0, 0, 30)
+Container.BackgroundTransparency = 1
+Container.BorderSizePixel = 0
+Container.ScrollBarThickness = 3
+Container.ScrollBarImageColor3 = Settings.Color
+Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Container.CanvasSize = UDim2.new(0, 0, 0, 0)
+Container.Parent = Main
+local layout = Instance.new("UIListLayout", Container)
+layout.Padding = UDim.new(0, 4)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local pad = Instance.new("UIPadding", Container)
+pad.PaddingTop = UDim.new(0, 6)
+
+-- ==================== YARDIMCI ====================
+local function CreateCategory(text)
+    local cat = Instance.new("TextLabel")
+    cat.Size = UDim2.new(1, -20, 0, 20)
+    cat.BackgroundTransparency = 1
+    cat.Text = "── " .. text .. " ──"
+    cat.TextColor3 = Settings.Color
+    cat.Font = Enum.Font.GothamBold
+    cat.TextSize = 10
+    cat.Parent = Container
+end
+
+local function CreateToggle(text, callback, default)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    btn.Text = "  " .. text .. " [OFF]"
+    btn.TextColor3 = Color3.fromRGB(150, 150, 160)
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 11
+    btn.Parent = Container
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 1.5
+    stroke.Color = Color3.fromRGB(40, 40, 50)
+    local state = default or false
+    local function updateV()
+        btn.Text = "  " .. text .. (state and " [ON]" or " [OFF]")
+        if state then
+            btn.TextColor3 = Color3.new(1, 1, 1)
+            stroke.Color = Color3.fromRGB(0, 220, 120)
+        else
+            btn.TextColor3 = Color3.fromRGB(150, 150, 160)
+            stroke.Color = Color3.fromRGB(40, 40, 50)
+        end
+    end
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        updateV()
+        if callback then callback(state) end
+    end)
+    updateV()
+    return { Get = function() return state end }
+end
+
+local function CreateButton(text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 45, 65)
+    btn.Text = text
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 11
+    btn.Parent = Container
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 1.5
+    stroke.Color = Settings.Color
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+-- ==================== DEĞİŞKENLER ====================
+local speedEnabled = false
+local jumpEnabled = false
+local aimlockEnabled = false
+local espEnabled = false
+local autoTech = false
+local antiHit = false
+
+-- ESP storage
+local espData = {}
+
+-- ==================== ESP (Optimize Edilmiş) ====================
+local function createESPForPlayer(p)
+    if espData[p] or not p.Character then return end
+    local char = p.Character
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "TSB_HL"
+    hl.FillColor = Settings.ESPFill
+    hl.OutlineColor = Settings.ESPOutline
+    hl.FillTransparency = Settings.ESPFillTransparency
+    hl.OutlineTransparency = 0
+    hl.Adornee = char
+    hl.Parent = char
+
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "TSB_BB"
+    bb.Adornee = head
+    bb.Size = UDim2.new(4, 0, 1.2, 0)
+    bb.StudsOffset = Vector3.new(0, 2.5, 0)
+    bb.AlwaysOnTop = true
+    bb.MaxDistance = 300
+    bb.Parent = head
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = p.Name
+    label.TextColor3 = Settings.ESPText
+    label.TextStrokeTransparency = 0.3
+    label.TextStrokeColor3 = Color3.new(0, 0, 0)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 14
+    label.Parent = bb
+
+    espData[p] = { highlight = hl, billboard = bb, label = label, character = char }
+end
+
+local function removeESPForPlayer(p)
+    local data = espData[p]
+    if data then
+        pcall(function() data.highlight:Destroy() end)
+        pcall(function() data.billboard:Destroy() end)
+        espData[p] = nil
+    end
+end
+
+local function cleanAllESP()
+    for p, _ in pairs(espData) do removeESPForPlayer(p) end
+    espData = {}
+end
+
+local function refreshESP()
+    if not espEnabled then return end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            local data = espData[p]
+            if hum and hum.Health > 0 then
+                if not data or data.character ~= p.Character or not data.highlight.Parent then
+                    if data then removeESPForPlayer(p) end
+                    createESPForPlayer(p)
+                end
+            else
+                if data then removeESPForPlayer(p) end
+            end
+        elseif espData[p] then
+            removeESPForPlayer(p)
+        end
+    end
+    for p, _ in pairs(espData) do
+        if not p.Parent then removeESPForPlayer(p) end
+    end
+end
+
+local function updateESPCurrentColors()
+    for p, data in pairs(espData) do
+        pcall(function()
+            if data.highlight and data.highlight.Parent then
+                data.highlight.FillColor = Settings.ESPFill
+                data.highlight.OutlineColor = Settings.ESPOutline
+                data.highlight.FillTransparency = Settings.ESPFillTransparency
+            end
+            if data.label and data.label.Parent then
+                data.label.TextColor3 = Settings.ESPText
+            end
+        end)
+    end
+end
+
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        if espEnabled then refreshESP() end
+    end)
+end)
+Players.PlayerRemoving:Connect(function(p) removeESPForPlayer(p) end)
+
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then
+        p.CharacterAdded:Connect(function()
+            task.wait(0.5)
+            if espEnabled then refreshESP() end
+        end)
+    end
+end
+
+task.spawn(function()
+    while true do
+        task.wait(5)
+        if espEnabled then refreshESP() end
+    end
+end)
+
+-- ==================== HIZ & ZIPLAMA ====================
+RunService.Heartbeat:Connect(function()
+    if LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            if speedEnabled then hum.WalkSpeed = Settings.WalkSpeed
+            else hum.WalkSpeed = 16 end
+            if jumpEnabled then
+                hum.UseJumpPower = true
+                hum.JumpPower = Settings.JumpPower
+            end
+        end
+    end
+end)
+
+-- ==================== AIMLOCK ====================
+local function getClosestPlayer()
+    local closest, minDist = nil, math.huge
+    local myChar = LocalPlayer.Character
+    if not myChar then return nil end
+    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local root = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if root and hum and hum.Health > 0 then
+                local dist = (myRoot.Position - root.Position).Magnitude
+                if dist < minDist and dist < 150 then
+                    minDist = dist; closest = p
+                end
+            end
+        end
+    end
+    return closest
+end
+
+RunService.RenderStepped:Connect(function()
+    if aimlockEnabled then
+        local target = getClosestPlayer()
+        if target and target.Character then
+            local head = target.Character:FindFirstChild("Head")
+            local hum = target.Character:FindFirstChildOfClass("Humanoid")
+            if head and hum and hum.Health > 0 then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)
+            end
+        end
+    end
+end)
+
+-- ==================== ANTI-HIT ====================
+RunService.Stepped:Connect(function()
+    if antiHit and LocalPlayer.Character then
+        local char = LocalPlayer.Character
+        for _, n in ipairs({"Freeze", "Stun", "Combo"}) do
+            local obj = char:FindFirstChild(n)
+            if obj then pcall(function() obj:Destroy() end) end
+        end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.PlatformStand = false
+            pcall(function()
+                hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+            end)
+        end
+    end
+end)
+
+-- ==================== AUTO TECH ====================
+RunService.Stepped:Connect(function()
+    if autoTech and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            local state = hum:GetState()
+            if state == Enum.HumanoidStateType.Ragdoll or state == Enum.HumanoidStateType.FallingDown then
+                pcall(function()
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+                end)
+            end
+        end
+    end
+end)
+
+-- ==================== GELİŞMİŞ FPS BOOSTER (DÜŞÜK CİHAZ) ====================
+local function advancedFPSBooster()
+    -- 1. Grafik ayarlarını en düşüğe çek
+    pcall(function()
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level01
+        settings().Rendering.EffectsQuality = Enum.QualityLevel.Level01
+    end)
+
+    -- 2. Lighting optimizasyonu
+    pcall(function()
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 100000
+        Lighting.Brightness = 1
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+        Lighting.ShadowSoftness = 0
+        Lighting.Outlines = false
+        Lighting.Technology = Enum.Technology.Compatibility
+    end)
+
+    -- 3. Atmosfer/efekt katmanlarını kaldır
+    pcall(function()
+        for _, v in pairs(Lighting:GetChildren()) do
+            if v:IsA("Atmosphere") or v:IsA("BloomEffect") or v:IsA("BlurEffect") or
+               v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") or
+               v:IsA("DepthOfFieldEffect") then
+                v.Enabled = false
+            end
+        end
+    end)
+
+    -- 4. Dünya objelerini optimize et
+    local count = 0
+    for _, v in pairs(game:GetDescendants()) do
+        -- Parçalar
+        if v:IsA("BasePart") then
+            pcall(function()
+                v.Material = Enum.Material.SmoothPlastic
+                if v:IsA("MeshPart") then
+                    v.RenderFidelity = Enum.RenderFidelity.Performance
+                    v.TextureID = ""
+                end
+                if v:IsA("Part") and v.Shape == Enum.PartType.Ball then
+                    v.Shape = Enum.PartType.Block
+                end
+            end)
+            count = count + 1
+        -- Parçacık / efekt sistemleri
+        elseif v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or
+               v:IsA("Sparkles") or v:IsA("Trail") or v:IsA("Beam") or
+               v:IsA("Explosion") or v:IsA("Fire") then
+            pcall(function() v.Enabled = false end)
+        -- Decal / Texture
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            pcall(function() v.Transparency = 1 end)
+        -- Gölge
+        elseif v:IsA("Shirt") or v:IsA("Pants") then
+            pcall(function() v:Destroy() end)
+        end
+    end
+
+    -- 5. Karakter parçalarının gölgelerini kapat
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character then
+            for _, part in pairs(p.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    pcall(function() part.CastShadow = false end)
+                end
+            end
+        end
+    end
+end
+
+-- Karakter yeni yüklendiğinde de gölgeleri kapat
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function(char)
+        task.wait(1)
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                pcall(function() part.CastShadow = false end)
+            end
+        end
+    end)
+end)
+
+for _, p in pairs(Players:GetPlayers()) do
+    if p.Character then
+        for _, part in pairs(p.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                pcall(function() part.CastShadow = false end)
+            end
+        end
+    end
+end
+
+-- ==================== MENÜ BUTONLARI ====================
+CreateCategory("HIZ & HAREKET")
+CreateToggle("⚡ Hız", function(s) speedEnabled = s end, false)
+CreateToggle("🦘 Zıplama", function(s) jumpEnabled = s end, false)
+
+CreateCategory("COMBAT")
+CreateToggle("🎯 Aimlock", function(s) aimlockEnabled = s end, false)
+CreateToggle("🔧 Auto Tech", function(s) autoTech = s end, false)
+CreateToggle("🛑 Anti-Hit", function(s) antiHit = s end, false)
+
+CreateCategory("GÖRSEL")
+CreateToggle("👁️ ESP", function(s)
+    espEnabled = s
+    if s then refreshESP() else cleanAllESP() end
+end, false)
+
+CreateCategory("SİSTEM")
+CreateButton("⚙️ Ayarlar", function()
+    local sg = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+    sg.Name = "TSB_Settings"; sg.ResetOnSpawn = false
+    local fr = Instance.new("Frame", sg)
+    fr.Size = UDim2.new(0, 280, 0, 340)
+    fr.Position = UDim2.new(0.5, -140, 0.5, -170)
+    fr.BackgroundColor3 = Color3.fromRGB(15, 15, 20); fr.Active = true
+    Instance.new("UICorner", fr).CornerRadius = UDim.new(0, 8)
+    local st = Instance.new("UIStroke", fr); st.Color = Settings.Color; st.Thickness = 2
+
+    local hd = Instance.new("Frame", fr)
+    hd.Size = UDim2.new(1, 0, 0, 30)
+    hd.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    hd.Parent = fr
+    Instance.new("UICorner", hd).CornerRadius = UDim.new(0, 8)
+    local tt = Instance.new("TextLabel", hd)
+    tt.Size = UDim2.new(1, -40, 1, 0); tt.Position = UDim2.new(0, 10, 0, 0)
+    tt.BackgroundTransparency = 1; tt.Text = "⚙️ AYARLAR"
+    tt.TextColor3 = Color3.new(1, 1, 1); tt.Font = Enum.Font.GothamBold
+    tt.TextSize = 12; tt.TextXAlignment = Enum.TextXAlignment.Left
+    local cl = Instance.new("TextButton", hd)
+    cl.Size = UDim2.new(0, 22, 0, 22); cl.Position = UDim2.new(1, -26, 0.5, -11)
+    cl.BackgroundColor3 = Color3.fromRGB(200, 50, 50); cl.Text = "✕"
+    cl.TextColor3 = Color3.new(1, 1, 1); cl.Font = Enum.Font.GothamBold; cl.TextSize = 10
+    cl.Parent = hd; Instance.new("UICorner", cl).CornerRadius = UDim.new(1, 0)
+    cl.MouseButton1Click:Connect(function() sg:Destroy() end)
+
+    local sd, ss, sp
+    hd.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            sd = true; ss = i.Position; sp = fr.Position
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if sd and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+            local d = i.Position - ss
+            fr.Position = UDim2.new(sp.X.Scale, sp.X.Offset + d.X, sp.Y.Scale, sp.Y.Offset + d.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then sd = false end
+    end)
+
+    local sfr = Instance.new("ScrollingFrame", fr)
+    sfr.Size = UDim2.new(1, -10, 1, -40)
+    sfr.Position = UDim2.new(0, 5, 0, 35)
+    sfr.BackgroundTransparency = 1
+    sfr.ScrollBarThickness = 3
+    sfr.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    sfr.CanvasSize = UDim2.new(0, 0, 0, 0)
+    sfr.BorderSizePixel = 0
+    local slayout = Instance.new("UIListLayout", sfr)
+    slayout.Padding = UDim.new(0, 4)
+    local spad = Instance.new("UIPadding", sfr)
+    spad.PaddingTop = UDim.new(0, 4)
+
+    local function createSlider(label, minV, maxV, currentVal, callback)
+        local lbl = Instance.new("TextLabel", sfr)
+        lbl.Size = UDim2.new(1, -10, 0, 18)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = label .. ": " .. math.floor(currentVal)
+        lbl.TextColor3 = Color3.new(1, 1, 1)
+        lbl.Font = Enum.Font.GothamBold
+        lbl.TextSize = 11
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+
+        local row = Instance.new("Frame", sfr)
+        row.Size = UDim2.new(1, -10, 0, 24)
+        row.BackgroundTransparency = 1
+
+        local dn = Instance.new("TextButton", row)
+        dn.Size = UDim2.new(0.5, -3, 1, 0)
+        dn.Position = UDim2.new(0, 0, 0, 0)
+        dn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        dn.Text = "-"
+        dn.TextColor3 = Color3.new(1, 1, 1)
+        dn.Font = Enum.Font.GothamBold
+        dn.TextSize = 12
+        Instance.new("UICorner", dn).CornerRadius = UDim.new(0, 4)
+
+        local up = Instance.new("TextButton", row)
+        up.Size = UDim2.new(0.5, -3, 1, 0)
+        up.Position = UDim2.new(0.5, 3, 0, 0)
+        up.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        up.Text = "+"
+        up.TextColor3 = Color3.new(1, 1, 1)
+        up.Font = Enum.Font.GothamBold
+        up.TextSize = 12
+        Instance.new("UICorner", up).CornerRadius = UDim.new(0, 4)
+
+        local step = (maxV - minV) / 20
+        dn.MouseButton1Click:Connect(function()
+            currentVal = math.max(minV, currentVal - step)
+            lbl.Text = label .. ": " .. math.floor(currentVal)
+            callback(currentVal)
+        end)
+        up.MouseButton1Click:Connect(function()
+            currentVal = math.min(maxV, currentVal + step)
+            lbl.Text = label .. ": " .. math.floor(currentVal)
+            callback(currentVal)
+        end)
+    end
+
+    local cat1 = Instance.new("TextLabel", sfr)
+    cat1.Size = UDim2.new(1, -10, 0, 18)
+    cat1.BackgroundTransparency = 1
+    cat1.Text = "── HIZ & ZIPLAMA ──"
+    cat1.TextColor3 = Settings.Color
+    cat1.Font = Enum.Font.GothamBold
+    cat1.TextSize = 10
+
+    createSlider("Hız", 16, 200, Settings.WalkSpeed, function(v) Settings.WalkSpeed = v end)
+    createSlider("Zıplama", 50, 300, Settings.JumpPower, function(v) Settings.JumpPower = v end)
+
+    local cat2 = Instance.new("TextLabel", sfr)
+    cat2.Size = UDim2.new(1, -10, 0, 18)
+    cat2.BackgroundTransparency = 1
+    cat2.Text = "── KAMERA ──"
+    cat2.TextColor3 = Settings.Color
+    cat2.Font = Enum.Font.GothamBold
+    cat2.TextSize = 10
+
+    createSlider("FOV", 70, 120, Settings.FOV, function(v) Camera.FieldOfView = v end)
+    createSlider("Max Zoom", 128, 500, Settings.MaxZoom, function(v) LocalPlayer.CameraMaxZoomDistance = v end)
+
+    local cat3 = Instance.new("TextLabel", sfr)
+    cat3.Size = UDim2.new(1, -10, 0, 18)
+    cat3.BackgroundTransparency = 1
+    cat3.Text = "── ESP RENK ──"
+    cat3.TextColor3 = Settings.Color
+    cat3.Font = Enum.Font.GothamBold
+    cat3.TextSize = 10
+
+    local colorLabel = Instance.new("TextLabel", sfr)
+    colorLabel.Size = UDim2.new(1, -10, 0, 18)
+    colorLabel.BackgroundTransparency = 1
+    colorLabel.Text = "Renk: Özel"
+    colorLabel.TextColor3 = Color3.new(1, 1, 1)
+    colorLabel.Font = Enum.Font.GothamBold
+    colorLabel.TextSize = 11
+    colorLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local preview = Instance.new("Frame", sfr)
+    preview.Size = UDim2.new(1, -10, 0, 20)
+    preview.BackgroundColor3 = Settings.ESPFill
+    preview.BorderSizePixel = 0
+    Instance.new("UICorner", preview).CornerRadius = UDim.new(0, 4)
+    local previewStroke = Instance.new("UIStroke", preview)
+    previewStroke.Color = Settings.ESPOutline
+    previewStroke.Thickness = 2
+
+    for _, preset in ipairs(ESPColorPresets) do
+        local pbtn = Instance.new("TextButton", sfr)
+        pbtn.Size = UDim2.new(1, -10, 0, 24)
+        pbtn.BackgroundColor3 = preset.fill
+        pbtn.Text = preset.name
+        pbtn.TextColor3 = Color3.new(1, 1, 1)
+        pbtn.Font = Enum.Font.GothamBold
+        pbtn.TextSize = 11
+        Instance.new("UICorner", pbtn).CornerRadius = UDim.new(0, 4)
+        local pstroke = Instance.new("UIStroke", pbtn)
+        pstroke.Color = preset.outline
+        pstroke.Thickness = 1.5
+
+        pbtn.MouseButton1Click:Connect(function()
+            Settings.ESPFill = preset.fill
+            Settings.ESPOutline = preset.outline
+            Settings.ESPText = preset.text
+            colorLabel.Text = "Renk: " .. preset.name
+            preview.BackgroundColor3 = preset.fill
+            previewStroke.Color = preset.outline
+            updateESPCurrentColors()
+        end)
+    end
+
+    local transLabel = Instance.new("TextLabel", sfr)
+    transLabel.Size = UDim2.new(1, -10, 0, 18)
+    transLabel.BackgroundTransparency = 1
+    transLabel.Text = "Şeffaflık: " .. string.format("%.1f", Settings.ESPFillTransparency)
+    transLabel.TextColor3 = Color3.new(1, 1, 1)
+    transLabel.Font = Enum.Font.GothamBold
+    transLabel.TextSize = 11
+    transLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local transRow = Instance.new("Frame", sfr)
+    transRow.Size = UDim2.new(1, -10, 0, 24)
+    transRow.BackgroundTransparency = 1
+
+    local tdn = Instance.new("TextButton", transRow)
+    tdn.Size = UDim2.new(0.5, -3, 1, 0)
+    tdn.Position = UDim2.new(0, 0, 0, 0)
+    tdn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    tdn.Text = "- Az Şeffaf"
+    tdn.TextColor3 = Color3.new(1, 1, 1)
+    tdn.Font = Enum.Font.GothamBold
+    tdn.TextSize = 10
+    Instance.new("UICorner", tdn).CornerRadius = UDim.new(0, 4)
+
+    local tup = Instance.new("TextButton", transRow)
+    tup.Size = UDim2.new(0.5, -3, 1, 0)
+    tup.Position = UDim2.new(0.5, 3, 0, 0)
+    tup.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    tup.Text = "+ Daha Şeffaf"
+    tup.TextColor3 = Color3.new(1, 1, 1)
+    tup.Font = Enum.Font.GothamBold
+    tup.TextSize = 10
+    Instance.new("UICorner", tup).CornerRadius = UDim.new(0, 4)
+
+    tdn.MouseButton1Click:Connect(function()
+        Settings.ESPFillTransparency = math.max(0, Settings.ESPFillTransparency - 0.1)
+        transLabel.Text = "Şeffaflık: " .. string.format("%.1f", Settings.ESPFillTransparency)
+        updateESPCurrentColors()
+    end)
+    tup.MouseButton1Click:Connect(function()
+        Settings.ESPFillTransparency = math.min(1, Settings.ESPFillTransparency + 0.1)
+        transLabel.Text = "Şeffaflık: " .. string.format("%.1f", Settings.ESPFillTransparency)
+        updateESPCurrentColors()
+    end)
+end)
+
+CreateButton("🚀 FPS Booster (Düşük Cihaz)", function()
+    advancedFPSBooster()
+end)
+CreateButton("♻️ Rejoin", function() TeleportService:Teleport(game.PlaceId, LocalPlayer) end)
+CreateButton("🌐 Server Hop", function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end)
+CreateButton("💨 Sınırsız Dash", function()
+    pcall(function()
+        for _, v in pairs(getgc(true)) do
+            if type(v) == "table" and rawget(v, "DashCooldown") then v.DashCooldown = 0 end
+        end
+    end)
+end)
+
+print("✅ NOVE HUB TSB v4 yüklendi")
