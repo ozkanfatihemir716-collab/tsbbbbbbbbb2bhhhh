@@ -1,0 +1,1333 @@
+-- ==================== TSB NOVE HUB v13 (Dil + Gizli Sızma + UI Fix) ====================
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local IS_MOBILE = UserInputService.TouchEnabled and not GuiService.IsWindows
+local DEVICE_NAME = IS_MOBILE and "MOBİL" or "PC"
+
+-- ==================== DİL DESTEĞİ ====================
+local Locales = {
+    tr = {
+        loading = "Yükleniyor...",
+        s1 = "Servisler başlatılıyor...",
+        s2 = "Hileler yükleniyor...",
+        s3 = "Arayüz hazırlanıyor...",
+        s4 = "Cihaz algılandı: ",
+        s5 = "Hazır!",
+        device = "Cihaz",
+        combatTab = "⚔ SAVAŞ",
+        moveTab = "🏃 HAREKET",
+        settingsTab = "⚙ AYAR",
+        aimlock = "Nişan Kilidi",
+        esp = "ESP",
+        infStamina = "Sınırsız Stamina",
+        ghostWalk = "Gizli Sızma",
+        speed = "Hız",
+        jump = "Zıplama",
+        hitboxExpander = "Hitbox Genişletici",
+        modeSection = "MOD",
+        moveSection = "HAREKET",
+        hitboxSection = "HITBOX",
+        cameraSection = "KAMERA",
+        themeSection = "ARAYÜZ RENGİ",
+        langSection = "DİL",
+        autoOn = "Gizli Otomatik Boost [AÇIK]",
+        autoOff = "Manuel Mod",
+        speedBase = "Hız (baz)",
+        jumpBase = "Zıplama (baz)",
+        hitboxBase = "Boyut (baz)",
+        maxZoom = "Maks Zoom",
+        presetWhite = "Beyaz (Varsayılan)",
+        preset1 = "Mor/Pembe",
+        preset2 = "Mavi/Cyan",
+        preset3 = "Kırmızı/Turuncu",
+        preset4 = "Yeşil/Lime",
+        preset5 = "Altın/Sarı",
+        preset6 = "Gri/Siyah",
+        preset7 = "Beyaz/Altın",
+    },
+    en = {
+        loading = "Loading...",
+        s1 = "Starting services...",
+        s2 = "Loading cheats...",
+        s3 = "Preparing interface...",
+        s4 = "Device detected: ",
+        s5 = "Ready!",
+        device = "Device",
+        combatTab = "⚔ COMBAT",
+        moveTab = "🏃 MOVE",
+        settingsTab = "⚙ SETTINGS",
+        aimlock = "Aimlock",
+        esp = "ESP",
+        infStamina = "Infinite Stamina",
+        ghostWalk = "Ghost Walk",
+        speed = "Speed",
+        jump = "Jump",
+        hitboxExpander = "Hitbox Expander",
+        modeSection = "MODE",
+        moveSection = "MOVEMENT",
+        hitboxSection = "HITBOX",
+        cameraSection = "CAMERA",
+        themeSection = "UI COLOR",
+        langSection = "LANGUAGE",
+        autoOn = "Hidden Auto Boost [ON]",
+        autoOff = "Manual Mode",
+        speedBase = "Speed (base)",
+        jumpBase = "Jump (base)",
+        hitboxBase = "Size (base)",
+        maxZoom = "Max Zoom",
+        presetWhite = "White (Default)",
+        preset1 = "Purple/Pink",
+        preset2 = "Blue/Cyan",
+        preset3 = "Red/Orange",
+        preset4 = "Green/Lime",
+        preset5 = "Gold/Yellow",
+        preset6 = "Gray/Black",
+        preset7 = "White/Gold",
+    },
+    de = {
+        loading = "Wird geladen...",
+        s1 = "Dienste werden gestartet...",
+        s2 = "Cheats werden geladen...",
+        s3 = "Oberfläche wird vorbereitet...",
+        s4 = "Gerät erkannt: ",
+        s5 = "Bereit!",
+        device = "Gerät",
+        combatTab = "⚔ KAMPF",
+        moveTab = "🏃 BEWEGUNG",
+        settingsTab = "⚙ EINSTELLUNG",
+        aimlock = "Ziel-Sperre",
+        esp = "ESP",
+        infStamina = "Unendlich Ausdauer",
+        ghostWalk = "Geister-Gehen",
+        speed = "Geschwindigkeit",
+        jump = "Springen",
+        hitboxExpander = "Hitbox-Erweiterer",
+        modeSection = "MODUS",
+        moveSection = "BEWEGUNG",
+        hitboxSection = "HITBOX",
+        cameraSection = "KAMERA",
+        themeSection = "UI-FARBE",
+        langSection = "SPRACHE",
+        autoOn = "Versteckter Auto-Boost [AN]",
+        autoOff = "Manueller Modus",
+        speedBase = "Geschw. (Basis)",
+        jumpBase = "Springen (Basis)",
+        hitboxBase = "Größe (Basis)",
+        maxZoom = "Max. Zoom",
+        presetWhite = "Weiß (Standard)",
+        preset1 = "Lila/Rosa",
+        preset2 = "Blau/Cyan",
+        preset3 = "Rot/Orange",
+        preset4 = "Grün/Limette",
+        preset5 = "Gold/Gelb",
+        preset6 = "Grau/Schwarz",
+        preset7 = "Weiß/Gold",
+    },
+    fr = {
+        loading = "Chargement...",
+        s1 = "Démarrage des services...",
+        s2 = "Chargement des triches...",
+        s3 = "Préparation de l'interface...",
+        s4 = "Appareil détecté : ",
+        s5 = "Prêt !",
+        device = "Appareil",
+        combatTab = "⚔ COMBAT",
+        moveTab = "🏃 MOUVEMENT",
+        settingsTab = "⚙ PARAMÈTRES",
+        aimlock = "Verrouillage",
+        esp = "ESP",
+        infStamina = "Endurance Infinie",
+        ghostWalk = "Marche Fantôme",
+        speed = "Vitesse",
+        jump = "Saut",
+        hitboxExpander = "Étendeur Hitbox",
+        modeSection = "MODE",
+        moveSection = "MOUVEMENT",
+        hitboxSection = "HITBOX",
+        cameraSection = "CAMÉRA",
+        themeSection = "COULEUR UI",
+        langSection = "LANGUE",
+        autoOn = "Auto-Boost Caché [ON]",
+        autoOff = "Mode Manuel",
+        speedBase = "Vitesse (base)",
+        jumpBase = "Saut (base)",
+        hitboxBase = "Taille (base)",
+        maxZoom = "Zoom Max",
+        presetWhite = "Blanc (Défaut)",
+        preset1 = "Violet/Rose",
+        preset2 = "Bleu/Cyan",
+        preset3 = "Rouge/Orange",
+        preset4 = "Vert/Citron",
+        preset5 = "Or/Jaune",
+        preset6 = "Gris/Noir",
+        preset7 = "Blanc/Or",
+    },
+    es = {
+        loading = "Cargando...",
+        s1 = "Iniciando servicios...",
+        s2 = "Cargando trucos...",
+        s3 = "Preparando interfaz...",
+        s4 = "Dispositivo detectado: ",
+        s5 = "¡Listo!",
+        device = "Dispositivo",
+        combatTab = "⚔ COMBATE",
+        moveTab = "🏃 MOVIMIENTO",
+        settingsTab = "⚙ AJUSTES",
+        aimlock = "Fijar Objetivo",
+        esp = "ESP",
+        infStamina = "Estamina Infinita",
+        ghostWalk = "Caminar Fantasma",
+        speed = "Velocidad",
+        jump = "Salto",
+        hitboxExpander = "Expansor Hitbox",
+        modeSection = "MODO",
+        moveSection = "MOVIMIENTO",
+        hitboxSection = "HITBOX",
+        cameraSection = "CÁMARA",
+        themeSection = "COLOR UI",
+        langSection = "IDIOMA",
+        autoOn = "Auto-Boost Oculto [ON]",
+        autoOff = "Modo Manual",
+        speedBase = "Velocidad (base)",
+        jumpBase = "Salto (base)",
+        hitboxBase = "Tamaño (base)",
+        maxZoom = "Zoom Máx",
+        presetWhite = "Blanco (Defecto)",
+        preset1 = "Morado/Rosa",
+        preset2 = "Azul/Cian",
+        preset3 = "Rojo/Naranja",
+        preset4 = "Verde/Lima",
+        preset5 = "Oro/Amarillo",
+        preset6 = "Gris/Negro",
+        preset7 = "Blanco/Oro",
+    },
+}
+
+local Settings = {
+    WalkSpeed = 32,
+    JumpPower = 60,
+    HitboxSize = 3,
+    Color1 = Color3.fromRGB(255, 255, 255),
+    Color2 = Color3.fromRGB(230, 230, 240),
+    Color3 = Color3.fromRGB(200, 200, 220),
+    AutoAdjust = true,
+    Language = "tr",
+    _BoostWalk = 1.0,
+    _BoostJump = 1.0,
+    _BoostHitbox = 1.0
+}
+
+local function L(key)
+    local lang = Locales[Settings.Language] or Locales.tr
+    return lang[key] or Locales.tr[key] or key
+end
+
+-- Metin referansları (dil değişince güncellenir)
+local TextRefs = {}
+local function regText(element, key)
+    table.insert(TextRefs, {el = element, key = key})
+    element.Text = L(key)
+end
+
+local function updateAllTexts()
+    for _, ref in ipairs(TextRefs) do
+        if ref.el and ref.el.Parent then
+            ref.el.Text = L(ref.key)
+        end
+    end
+end
+
+-- Renk presetleri (anahtarlarla)
+local ColorPresets = {
+    {key = "presetWhite", c1 = Color3.fromRGB(255, 255, 255), c2 = Color3.fromRGB(230, 230, 240), c3 = Color3.fromRGB(200, 200, 220)},
+    {key = "preset1", c1 = Color3.fromRGB(140, 90, 255), c2 = Color3.fromRGB(255, 90, 200), c3 = Color3.fromRGB(80, 200, 255)},
+    {key = "preset2", c1 = Color3.fromRGB(50, 130, 255), c2 = Color3.fromRGB(100, 220, 255), c3 = Color3.fromRGB(150, 240, 255)},
+    {key = "preset3", c1 = Color3.fromRGB(255, 60, 60), c2 = Color3.fromRGB(255, 140, 30), c3 = Color3.fromRGB(255, 200, 50)},
+    {key = "preset4", c1 = Color3.fromRGB(50, 200, 100), c2 = Color3.fromRGB(150, 255, 80), c3 = Color3.fromRGB(200, 255, 150)},
+    {key = "preset5", c1 = Color3.fromRGB(255, 200, 0), c2 = Color3.fromRGB(255, 240, 100), c3 = Color3.fromRGB(255, 255, 180)},
+    {key = "preset6", c1 = Color3.fromRGB(80, 80, 90), c2 = Color3.fromRGB(140, 140, 160), c3 = Color3.fromRGB(200, 200, 220)},
+    {key = "preset7", c1 = Color3.fromRGB(230, 230, 240), c2 = Color3.fromRGB(255, 215, 0), c3 = Color3.fromRGB(255, 240, 150)},
+}
+
+-- ==================== SHINE ====================
+local activeShines = {}
+
+local function createShineOverlay(parent, cornerRadius, shineDuration)
+    shineDuration = shineDuration or 2.2
+    local shine = Instance.new("Frame")
+    shine.Name = "ShineFX"
+    shine.Size = UDim2.new(1, 0, 1, 0)
+    shine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    shine.BorderSizePixel = 0
+    shine.ZIndex = 10
+    shine.Active = false
+    shine.Parent = parent
+
+    if cornerRadius then
+        Instance.new("UICorner", shine).CornerRadius = cornerRadius
+    end
+
+    local grad = Instance.new("UIGradient", shine)
+    grad.Rotation = 25
+    grad.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
+    grad.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.40, 1),
+        NumberSequenceKeypoint.new(0.50, 0.15),
+        NumberSequenceKeypoint.new(0.60, 1),
+        NumberSequenceKeypoint.new(1, 1),
+    })
+    grad.Offset = Vector2.new(-1.3, 0)
+
+    table.insert(activeShines, {shine = shine, grad = grad, duration = shineDuration, active = true})
+    return shine
+end
+
+RunService.Heartbeat:Connect(function(dt)
+    for i = #activeShines, 1, -1 do
+        local data = activeShines[i]
+        if not data.shine.Parent then
+            table.remove(activeShines, i)
+        elseif data.active then
+            data.grad.Offset = data.grad.Offset + Vector2.new(dt / data.duration * 2.6, 0)
+            if data.grad.Offset.X > 1.3 then
+                data.grad.Offset = Vector2.new(-1.3, 0)
+                data.active = false
+                task.delay(1.8, function()
+                    if data.shine.Parent then data.active = true end
+                end)
+            end
+        end
+    end
+end)
+
+-- ==================== FPS ====================
+local fps = 0
+local frameCount = 0
+local timeAccum = 0
+RunService.RenderStepped:Connect(function(dt)
+    frameCount = frameCount + 1
+    timeAccum = timeAccum + dt
+    if timeAccum >= 1 then
+        fps = math.floor(frameCount / timeAccum)
+        frameCount = 0
+        timeAccum = 0
+    end
+end)
+
+-- ==================== YÜKLEME EKRANI ====================
+local LoadingGui = Instance.new("ScreenGui")
+LoadingGui.Name = "TSB_Loading"
+LoadingGui.ResetOnSpawn = false
+LoadingGui.IgnoreGuiInset = true
+LoadingGui.DisplayOrder = 999
+LoadingGui.Parent = PlayerGui
+
+local LoadingBg = Instance.new("Frame", LoadingGui)
+LoadingBg.Size = UDim2.new(1, 0, 1, 0)
+LoadingBg.BackgroundColor3 = Color3.fromRGB(10, 8, 18)
+LoadingBg.BorderSizePixel = 0
+
+local LoadingFrame = Instance.new("Frame", LoadingBg)
+LoadingFrame.Size = UDim2.new(0, 380, 0, 220)
+LoadingFrame.Position = UDim2.new(0.5, -190, 0.5, -110)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(18, 12, 28)
+LoadingFrame.BorderSizePixel = 0
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 16)
+
+local LoadingStroke = Instance.new("UIStroke", LoadingFrame)
+LoadingStroke.Thickness = 2
+LoadingStroke.Color = Color3.fromRGB(220, 220, 240)
+
+local strokeHue = 0
+RunService.RenderStepped:Connect(function(dt)
+    if LoadingStroke and LoadingStroke.Parent then
+        strokeHue = (strokeHue + dt * 0.3) % 1
+        LoadingStroke.Color = Color3.fromHSV(strokeHue, 0.4, 1)
+    end
+end)
+
+local LoadingTitle = Instance.new("TextLabel", LoadingFrame)
+LoadingTitle.Size = UDim2.new(1, 0, 0, 50)
+LoadingTitle.Position = UDim2.new(0, 0, 0, 25)
+LoadingTitle.BackgroundTransparency = 1
+LoadingTitle.Text = "NOVE HUB"
+LoadingTitle.TextColor3 = Color3.fromRGB(240, 240, 250)
+LoadingTitle.Font = Enum.Font.GothamBlack
+LoadingTitle.TextSize = 38
+LoadingTitle.TextXAlignment = Enum.TextXAlignment.Center
+LoadingTitle.ZIndex = 3
+
+local LoadingSub = Instance.new("TextLabel", LoadingFrame)
+LoadingSub.Size = UDim2.new(1, 0, 0, 20)
+LoadingSub.Position = UDim2.new(0, 0, 0, 72)
+LoadingSub.BackgroundTransparency = 1
+LoadingSub.Text = "The Strongest Battlegrounds"
+LoadingSub.TextColor3 = Color3.fromRGB(200, 200, 220)
+LoadingSub.Font = Enum.Font.Gotham
+LoadingSub.TextSize = 13
+LoadingSub.TextXAlignment = Enum.TextXAlignment.Center
+LoadingSub.ZIndex = 3
+
+local DeviceLabel = Instance.new("TextLabel", LoadingFrame)
+DeviceLabel.Size = UDim2.new(1, 0, 0, 20)
+DeviceLabel.Position = UDim2.new(0, 0, 0, 95)
+DeviceLabel.BackgroundTransparency = 1
+DeviceLabel.Text = L("device") .. ": " .. DEVICE_NAME
+DeviceLabel.TextColor3 = Color3.fromRGB(180, 220, 255)
+DeviceLabel.Font = Enum.Font.GothamBold
+DeviceLabel.TextSize = 12
+DeviceLabel.TextXAlignment = Enum.TextXAlignment.Center
+DeviceLabel.ZIndex = 3
+
+local BarBg = Instance.new("Frame", LoadingFrame)
+BarBg.Size = UDim2.new(0, 300, 0, 10)
+BarBg.Position = UDim2.new(0.5, -150, 0, 130)
+BarBg.BackgroundColor3 = Color3.fromRGB(35, 25, 50)
+BarBg.BorderSizePixel = 0
+BarBg.ZIndex = 3
+Instance.new("UICorner", BarBg).CornerRadius = UDim.new(1, 0)
+
+local BarFill = Instance.new("Frame", BarBg)
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(220, 220, 240)
+BarFill.BorderSizePixel = 0
+Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
+
+local LoadingStatus = Instance.new("TextLabel", LoadingFrame)
+LoadingStatus.Size = UDim2.new(1, 0, 0, 20)
+LoadingStatus.Position = UDim2.new(0, 0, 0, 155)
+LoadingStatus.BackgroundTransparency = 1
+LoadingStatus.Text = L("loading")
+LoadingStatus.TextColor3 = Color3.fromRGB(160, 150, 180)
+LoadingStatus.Font = Enum.Font.Gotham
+LoadingStatus.TextSize = 11
+LoadingStatus.TextXAlignment = Enum.TextXAlignment.Center
+LoadingStatus.ZIndex = 3
+
+local FPSLabel = Instance.new("TextLabel", LoadingFrame)
+FPSLabel.Size = UDim2.new(1, 0, 0, 16)
+FPSLabel.Position = UDim2.new(0, 0, 0, 175)
+FPSLabel.BackgroundTransparency = 1
+FPSLabel.Text = "FPS: " .. fps
+FPSLabel.TextColor3 = Color3.fromRGB(100, 220, 150)
+FPSLabel.Font = Enum.Font.GothamBold
+FPSLabel.TextSize = 11
+FPSLabel.TextXAlignment = Enum.TextXAlignment.Center
+FPSLabel.ZIndex = 3
+
+createShineOverlay(LoadingFrame, UDim.new(0, 16), 2.4)
+
+local progress = 0
+task.spawn(function()
+    while progress < 1 do
+        task.wait(0.03)
+        progress = math.min(1, progress + math.random() * 0.03)
+        BarFill:TweenSize(UDim2.new(progress, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.1, true)
+        FPSLabel.Text = "FPS: " .. fps .. " | " .. L("device") .. ": " .. DEVICE_NAME
+        if progress < 0.25 then
+            LoadingStatus.Text = L("s1")
+        elseif progress < 0.5 then
+            LoadingStatus.Text = L("s2")
+        elseif progress < 0.75 then
+            LoadingStatus.Text = L("s3")
+        elseif progress < 1 then
+            LoadingStatus.Text = L("s4") .. DEVICE_NAME
+        else
+            LoadingStatus.Text = L("s5")
+        end
+    end
+    task.wait(0.3)
+    LoadingFrame:TweenPosition(UDim2.new(0.5, -190, 1.5, 0), Enum.EasingDirection.In, Enum.EasingStyle.Back, 0.5, true)
+    task.wait(0.5)
+    LoadingGui:Destroy()
+end)
+
+task.wait(2.5)
+
+-- ==================== SCRIPT ====================
+if PlayerGui:FindFirstChild("TSB_Hub") then
+    PlayerGui.TSB_Hub:Destroy()
+end
+
+-- Otomatik boost hesaplama
+local function ApplyAutoSettings()
+    if not Settings.AutoAdjust then
+        Settings._BoostWalk = 1.0
+        Settings._BoostJump = 1.0
+        Settings._BoostHitbox = 1.0
+        return
+    end
+    if IS_MOBILE then
+        Settings._BoostWalk = 1.15
+        Settings._BoostJump = 1.10
+        Settings._BoostHitbox = 1.0
+    else
+        if fps < 30 then
+            Settings._BoostWalk = 1.10
+            Settings._BoostJump = 1.05
+            Settings._BoostHitbox = 1.0
+        else
+            Settings._BoostWalk = 1.25
+            Settings._BoostJump = 1.20
+            Settings._BoostHitbox = 1.15
+        end
+    end
+end
+ApplyAutoSettings()
+
+-- ==================== GUI ====================
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "TSB_Hub"
+Gui.ResetOnSpawn = false
+Gui.Parent = PlayerGui
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 280, 0, 440)
+Main.Position = UDim2.new(0.05, 0, 0.2, 0)
+Main.BackgroundColor3 = Color3.fromRGB(15, 12, 22)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Parent = Gui
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 16)
+
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Thickness = 1.5
+MainStroke.Color = Settings.Color1
+MainStroke.Transparency = 0.3
+
+local Header = Instance.new("Frame", Main)
+Header.Size = UDim2.new(1, 0, 0, 48)
+Header.BackgroundColor3 = Color3.fromRGB(22, 16, 35)
+Header.BorderSizePixel = 0
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 16)
+
+local HeaderGrad = Instance.new("UIGradient")
+HeaderGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Settings.Color1),
+    ColorSequenceKeypoint.new(1, Settings.Color2)
+}
+HeaderGrad.Parent = Header
+
+local Title = Instance.new("TextLabel", Header)
+Title.Size = UDim2.new(1, -60, 1, 0)
+Title.Position = UDim2.new(0, 16, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "TSB // NOVE HUB"
+Title.TextColor3 = Color3.fromRGB(30, 30, 40)
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 15
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 3
+
+local Subtitle = Instance.new("TextLabel", Header)
+Subtitle.Size = UDim2.new(1, -60, 0, 14)
+Subtitle.Position = UDim2.new(0, 16, 1, -18)
+Subtitle.BackgroundTransparency = 1
+Subtitle.Text = DEVICE_NAME .. " · FPS: " .. fps
+Subtitle.TextColor3 = Color3.fromRGB(50, 50, 60)
+Subtitle.Font = Enum.Font.Gotham
+Subtitle.TextSize = 9
+Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+Subtitle.ZIndex = 3
+
+task.spawn(function()
+    while Subtitle and Subtitle.Parent do
+        task.wait(1)
+        Subtitle.Text = DEVICE_NAME .. " · FPS: " .. fps
+    end
+end)
+
+local CloseBtn = Instance.new("TextButton", Header)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -40, 0.5, -15)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(80, 30, 60)
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 200, 220)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 22
+CloseBtn.ZIndex = 4
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+
+createShineOverlay(Header, UDim.new(0, 16), 2.0)
+
+local dragging, dragStart, startPos
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = input.Position; startPos = Main.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+local FloatBtn = Instance.new("TextButton", Gui)
+FloatBtn.Size = UDim2.new(0, 48, 0, 48)
+FloatBtn.Position = UDim2.new(0, 20, 0.5, -24)
+FloatBtn.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
+FloatBtn.Text = "N"
+FloatBtn.TextColor3 = Settings.Color2
+FloatBtn.Font = Enum.Font.GothamBlack
+FloatBtn.TextSize = 20
+FloatBtn.Visible = false
+Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
+local FloatStroke = Instance.new("UIStroke", FloatBtn)
+FloatStroke.Color = Settings.Color1
+FloatStroke.Thickness = 2
+
+local floatShine = createShineOverlay(FloatBtn, UDim.new(1, 0), 1.6)
+floatShine.Visible = false
+FloatBtn:GetPropertyChangedSignal("Visible"):Connect(function()
+    floatShine.Visible = FloatBtn.Visible
+end)
+
+local fDrag, fStart, fStartPos
+FloatBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        fDrag = true; fStart = input.Position; fStartPos = FloatBtn.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if fDrag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - fStart
+        FloatBtn.Position = UDim2.new(fStartPos.X.Scale, fStartPos.X.Offset + delta.X, fStartPos.Y.Scale, fStartPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        fDrag = false
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    FloatBtn.Visible = true
+end)
+FloatBtn.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    FloatBtn.Visible = false
+end)
+
+-- ==================== SEKMELER ====================
+local TabBar = Instance.new("Frame", Main)
+TabBar.Size = UDim2.new(1, -20, 0, 32)
+TabBar.Position = UDim2.new(0, 10, 0, 54)
+TabBar.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
+TabBar.BorderSizePixel = 0
+Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0, 8)
+
+local CombatTab = Instance.new("TextButton", TabBar)
+CombatTab.Size = UDim2.new(0.33, -3, 1, 0)
+CombatTab.Position = UDim2.new(0, 3, 0, 0)
+CombatTab.BackgroundColor3 = Settings.Color1
+CombatTab.TextColor3 = Color3.fromRGB(30, 30, 40)
+CombatTab.Font = Enum.Font.GothamBold
+CombatTab.TextSize = 10
+CombatTab.ZIndex = 3
+Instance.new("UICorner", CombatTab).CornerRadius = UDim.new(0, 6)
+regText(CombatTab, "combatTab")
+
+local MoveTab = Instance.new("TextButton", TabBar)
+MoveTab.Size = UDim2.new(0.33, -3, 1, 0)
+MoveTab.Position = UDim2.new(0.33, 0, 0, 0)
+MoveTab.BackgroundColor3 = Color3.fromRGB(28, 20, 42)
+MoveTab.TextColor3 = Color3.fromRGB(180, 160, 220)
+MoveTab.Font = Enum.Font.GothamBold
+MoveTab.TextSize = 10
+MoveTab.ZIndex = 3
+Instance.new("UICorner", MoveTab).CornerRadius = UDim.new(0, 6)
+regText(MoveTab, "moveTab")
+
+local SettingsTab = Instance.new("TextButton", TabBar)
+SettingsTab.Size = UDim2.new(0.33, -3, 1, 0)
+SettingsTab.Position = UDim2.new(0.66, 0, 0, 0)
+SettingsTab.BackgroundColor3 = Color3.fromRGB(28, 20, 42)
+SettingsTab.TextColor3 = Color3.fromRGB(180, 160, 220)
+SettingsTab.Font = Enum.Font.GothamBold
+SettingsTab.TextSize = 10
+SettingsTab.ZIndex = 3
+Instance.new("UICorner", SettingsTab).CornerRadius = UDim.new(0, 6)
+regText(SettingsTab, "settingsTab")
+
+createShineOverlay(TabBar, UDim.new(0, 8), 2.6)
+
+local CombatContent = Instance.new("ScrollingFrame", Main)
+CombatContent.Size = UDim2.new(1, -20, 1, -145)
+CombatContent.Position = UDim2.new(0, 10, 0, 92)
+CombatContent.BackgroundTransparency = 1
+CombatContent.BorderSizePixel = 0
+CombatContent.ScrollBarThickness = 3
+CombatContent.ScrollBarImageColor3 = Settings.Color1
+CombatContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+CombatContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+Instance.new("UIListLayout", CombatContent).Padding = UDim.new(0, 8)
+
+local MoveContent = Instance.new("ScrollingFrame", Main)
+MoveContent.Size = UDim2.new(1, -20, 1, -145)
+MoveContent.Position = UDim2.new(0, 10, 0, 92)
+MoveContent.BackgroundTransparency = 1
+MoveContent.BorderSizePixel = 0
+MoveContent.ScrollBarThickness = 3
+MoveContent.ScrollBarImageColor3 = Settings.Color2
+MoveContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+MoveContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+MoveContent.Visible = false
+Instance.new("UIListLayout", MoveContent).Padding = UDim.new(0, 8)
+
+local SettingsContent = Instance.new("ScrollingFrame", Main)
+SettingsContent.Size = UDim2.new(1, -20, 1, -145)
+SettingsContent.Position = UDim2.new(0, 10, 0, 92)
+SettingsContent.BackgroundTransparency = 1
+SettingsContent.BorderSizePixel = 0
+SettingsContent.ScrollBarThickness = 3
+SettingsContent.ScrollBarImageColor3 = Settings.Color3
+SettingsContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+SettingsContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+SettingsContent.Visible = false
+Instance.new("UIListLayout", SettingsContent).Padding = UDim.new(0, 8)
+
+local function switchTab(tab)
+    CombatContent.Visible = (tab == "combat")
+    MoveContent.Visible = (tab == "move")
+    SettingsContent.Visible = (tab == "settings")
+
+    CombatTab.BackgroundColor3 = (tab == "combat") and Settings.Color1 or Color3.fromRGB(28, 20, 42)
+    CombatTab.TextColor3 = (tab == "combat") and Color3.fromRGB(30, 30, 40) or Color3.fromRGB(180, 160, 220)
+
+    MoveTab.BackgroundColor3 = (tab == "move") and Settings.Color2 or Color3.fromRGB(28, 20, 42)
+    MoveTab.TextColor3 = (tab == "move") and Color3.fromRGB(30, 30, 40) or Color3.fromRGB(180, 160, 220)
+
+    SettingsTab.BackgroundColor3 = (tab == "settings") and Settings.Color3 or Color3.fromRGB(28, 20, 42)
+    SettingsTab.TextColor3 = (tab == "settings") and Color3.fromRGB(30, 30, 40) or Color3.fromRGB(180, 160, 220)
+end
+
+CombatTab.MouseButton1Click:Connect(function() switchTab("combat") end)
+MoveTab.MouseButton1Click:Connect(function() switchTab("move") end)
+SettingsTab.MouseButton1Click:Connect(function() switchTab("settings") end)
+
+-- ==================== BUTON OLUŞTURUCU ====================
+local AllToggles = {}
+
+local function CreateToggle(parent, textKey, emoji, callback, defaultState)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(1, 0, 0, 42)
+    btn.BackgroundColor3 = Color3.fromRGB(22, 17, 32)
+    btn.Text = ""
+    btn.BorderSizePixel = 0
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+
+    local btnStroke = Instance.new("UIStroke", btn)
+    btnStroke.Thickness = 1
+    btnStroke.Color = Color3.fromRGB(45, 35, 60)
+
+    local iconLbl = Instance.new("TextLabel", btn)
+    iconLbl.Size = UDim2.new(0, 34, 1, 0)
+    iconLbl.Position = UDim2.new(0, 6, 0, 0)
+    iconLbl.BackgroundTransparency = 1
+    iconLbl.Text = emoji
+    iconLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    iconLbl.Font = Enum.Font.GothamBold
+    iconLbl.TextSize = 18
+
+    local txtLbl = Instance.new("TextLabel", btn)
+    txtLbl.Size = UDim2.new(1, -70, 1, 0)
+    txtLbl.Position = UDim2.new(0, 42, 0, 0)
+    txtLbl.BackgroundTransparency = 1
+    txtLbl.TextColor3 = Color3.fromRGB(200, 195, 220)
+    txtLbl.Font = Enum.Font.GothamBold
+    txtLbl.TextSize = 12
+    txtLbl.TextXAlignment = Enum.TextXAlignment.Left
+    regText(txtLbl, textKey)
+
+    local status = Instance.new("Frame", btn)
+    status.Size = UDim2.new(0, 10, 0, 10)
+    status.Position = UDim2.new(1, -22, 0.5, -5)
+    status.BackgroundColor3 = Color3.fromRGB(60, 50, 80)
+    Instance.new("UICorner", status).CornerRadius = UDim.new(1, 0)
+
+    local state = defaultState or false
+    local function updateV()
+        if state then
+            btn.BackgroundColor3 = Color3.fromRGB(35, 22, 55)
+            btnStroke.Color = Settings.Color1
+            txtLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+            status.BackgroundColor3 = Settings.Color2
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(22, 17, 32)
+            btnStroke.Color = Color3.fromRGB(45, 35, 60)
+            txtLbl.TextColor3 = Color3.fromRGB(200, 195, 220)
+            status.BackgroundColor3 = Color3.fromRGB(60, 50, 80)
+        end
+    end
+
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        updateV()
+        if callback then callback(state) end
+    end)
+    updateV()
+
+    table.insert(AllToggles, {btn = btn, stroke = btnStroke, icon = iconLbl, status = status, txt = txtLbl, updateV = updateV})
+end
+
+-- ==================== RENK GÜNCELLEME ====================
+local function ApplyTheme()
+    MainStroke.Color = Settings.Color1
+    HeaderGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Settings.Color1),
+        ColorSequenceKeypoint.new(1, Settings.Color2)
+    }
+    FloatStroke.Color = Settings.Color1
+    FloatBtn.TextColor3 = Settings.Color2
+
+    if CombatContent.Visible then
+        CombatTab.BackgroundColor3 = Settings.Color1
+        CombatTab.TextColor3 = Color3.fromRGB(30, 30, 40)
+    elseif MoveContent.Visible then
+        MoveTab.BackgroundColor3 = Settings.Color2
+        MoveTab.TextColor3 = Color3.fromRGB(30, 30, 40)
+    elseif SettingsContent.Visible then
+        SettingsTab.BackgroundColor3 = Settings.Color3
+        SettingsTab.TextColor3 = Color3.fromRGB(30, 30, 40)
+    end
+
+    for _, t in ipairs(AllToggles) do t.updateV() end
+end
+
+-- ==================== DEĞİŞKENLER ====================
+local G = {
+    Speed = false,
+    Jump = false,
+    Aimlock = false,
+    ESP = false,
+    Hitbox = false,
+    InfStamina = false,
+    GhostWalk = false
+}
+
+local aimTarget = nil
+local espData = {}
+local currentHitbox = nil
+
+-- ==================== HIZ & ZIPLAMA ====================
+RunService.Heartbeat:Connect(function()
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            if G.Speed then
+                hum.WalkSpeed = Settings.WalkSpeed * Settings._BoostWalk
+            else
+                hum.WalkSpeed = 16
+            end
+            if G.Jump then
+                hum.UseJumpPower = true
+                hum.JumpPower = Settings.JumpPower * Settings._BoostJump
+            end
+        end
+    end
+end)
+
+-- ==================== GİZLİ SIZMA ====================
+-- Her 1 saniyede karakter baktığı yönün tersine (arkasına) 0.3 stud kayar
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if G.GhostWalk then
+            local char = LocalPlayer.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CFrame = hrp.CFrame * CFrame.new(0, 0, 0.3)
+                end
+            end
+        end
+    end
+end)
+
+-- ==================== AIMLOCK ====================
+local function getClosestPlayer()
+    local closest, minDist = nil, 150
+    local myChar = LocalPlayer.Character
+    if not myChar then return nil end
+    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local root = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if root and hum and hum.Health > 0 then
+                local dist = (myRoot.Position - root.Position).Magnitude
+                if dist < minDist then
+                    minDist = dist; closest = p
+                end
+            end
+        end
+    end
+    return closest
+end
+
+RunService.RenderStepped:Connect(function()
+    if G.Aimlock then
+        if not aimTarget or not aimTarget.Character or not aimTarget.Character:FindFirstChild("Head") then
+            aimTarget = getClosestPlayer()
+        end
+        if aimTarget and aimTarget.Character then
+            local head = aimTarget.Character:FindFirstChild("Head")
+            local hum = aimTarget.Character:FindFirstChildOfClass("Humanoid")
+            if head and hum and hum.Health > 0 then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)
+            else
+                aimTarget = nil
+            end
+        end
+    end
+end)
+
+-- ==================== ESP ====================
+local function createESPForPlayer(p)
+    if espData[p] or not p.Character then return end
+    local char = p.Character
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "TSB_HL"
+    hl.FillColor = Settings.Color2
+    hl.OutlineColor = Settings.Color2
+    hl.FillTransparency = 0.55
+    hl.OutlineTransparency = 0
+    hl.Adornee = char
+    hl.Parent = char
+
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "TSB_BB"
+    bb.Adornee = head
+    bb.Size = UDim2.new(4, 0, 1.2, 0)
+    bb.StudsOffset = Vector3.new(0, 2.5, 0)
+    bb.AlwaysOnTop = true
+    bb.MaxDistance = 300
+    bb.Parent = head
+
+    local lbl = Instance.new("TextLabel", bb)
+    lbl.Size = UDim2.new(1, 0, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = p.Name
+    lbl.TextColor3 = Settings.Color2
+    lbl.TextStrokeTransparency = 0.3
+    lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 13
+    lbl.Parent = bb
+
+    espData[p] = { highlight = hl, billboard = bb, character = char, label = lbl }
+end
+
+local function removeESPForPlayer(p)
+    local d = espData[p]
+    if d then
+        if d.highlight then d.highlight:Destroy() end
+        if d.billboard then d.billboard:Destroy() end
+        espData[p] = nil
+    end
+end
+
+local function cleanAllESP()
+    for p, _ in pairs(espData) do removeESPForPlayer(p) end
+    espData = {}
+end
+
+local function refreshESP()
+    if not G.ESP then return end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            local d = espData[p]
+            if hum and hum.Health > 0 then
+                if not d or d.character ~= p.Character or not d.highlight.Parent then
+                    if d then removeESPForPlayer(p) end
+                    createESPForPlayer(p)
+                end
+            else
+                if d then removeESPForPlayer(p) end
+            end
+        elseif espData[p] then
+            removeESPForPlayer(p)
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        if G.ESP then refreshESP() end
+    end)
+end)
+Players.PlayerRemoving:Connect(function(p) removeESPForPlayer(p) end)
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then
+        p.CharacterAdded:Connect(function()
+            task.wait(0.5)
+            if G.ESP then refreshESP() end
+        end)
+    end
+end
+
+task.spawn(function()
+    while true do
+        task.wait(2)
+        if G.ESP then refreshESP() end
+    end
+end)
+
+-- ==================== HITBOX ====================
+local function createHitbox()
+    if currentHitbox then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local hb = Instance.new("Part")
+    hb.Name = "TSB_Hitbox"
+    hb.Size = Vector3.new(3, 7.5, 1.5) * (Settings.HitboxSize * Settings._BoostHitbox)
+    hb.CFrame = hrp.CFrame
+    hb.Transparency = 1
+    hb.CanCollide = false
+    hb.CanTouch = true
+    hb.Massless = true
+    hb.Anchored = false
+    hb.Parent = char
+
+    local weld = Instance.new("WeldConstraint")
+    weld.Part0 = hrp
+    weld.Part1 = hb
+    weld.Parent = hrp
+
+    currentHitbox = hb
+end
+
+local function removeHitbox()
+    if currentHitbox then
+        currentHitbox:Destroy()
+        currentHitbox = nil
+    end
+end
+
+local function updateHitboxSize()
+    if currentHitbox and currentHitbox.Parent then
+        currentHitbox.Size = Vector3.new(3, 7.5, 1.5) * (Settings.HitboxSize * Settings._BoostHitbox)
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if G.Hitbox then
+        removeHitbox()
+        createHitbox()
+    end
+end)
+
+-- ==================== SINIRSIZ STAMINA ====================
+RunService.Heartbeat:Connect(function()
+    if not G.InfStamina then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    for _, name in ipairs({"Stamina", "stamina", "StaminaValue", "Energy", "energy"}) do
+        local val = char:FindFirstChild(name, true)
+        if val and (val:IsA("NumberValue") or val:IsA("IntValue")) then
+            if val.Value < val.MaxValue then val.Value = val.MaxValue end
+        end
+    end
+
+    local pg = LocalPlayer:FindFirstChild("PlayerGui")
+    if pg then
+        for _, obj in ipairs(pg:GetDescendants()) do
+            if obj:IsA("NumberValue") or obj:IsA("IntValue") then
+                if obj.Name:lower():find("stamina") or obj.Name:lower():find("energy") then
+                    if obj.Value < obj.MaxValue then obj.Value = obj.MaxValue end
+                end
+            end
+        end
+    end
+end)
+
+-- ==================== AYARLAR SEKMESİ ====================
+local function createSlider(parent, labelKey, minV, maxV, currentVal, callback)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(1, -10, 0, 44)
+    row.BackgroundColor3 = Color3.fromRGB(22, 17, 32)
+    row.BorderSizePixel = 0
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(1, -20, 0, 18)
+    lbl.Position = UDim2.new(0, 10, 0, 4)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(220, 210, 240)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 10
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    local baseText = L(labelKey)
+    lbl.Text = baseText .. ": " .. (math.floor(currentVal * 10) / 10)
+    table.insert(TextRefs, {el = lbl, key = labelKey, isSlider = true, suffix = ": " .. (math.floor(currentVal * 10) / 10)})
+
+    local dn = Instance.new("TextButton", row)
+    dn.Size = UDim2.new(0, 50, 0, 20)
+    dn.Position = UDim2.new(0, 10, 0, 22)
+    dn.BackgroundColor3 = Color3.fromRGB(80, 30, 60)
+    dn.Text = "−"
+    dn.TextColor3 = Color3.new(1, 1, 1)
+    dn.Font = Enum.Font.GothamBold
+    dn.TextSize = 14
+    Instance.new("UICorner", dn).CornerRadius = UDim.new(0, 5)
+
+    local up = Instance.new("TextButton", row)
+    up.Size = UDim2.new(0, 50, 0, 20)
+    up.Position = UDim2.new(1, -60, 0, 22)
+    up.BackgroundColor3 = Color3.fromRGB(40, 80, 60)
+    up.Text = "+"
+    up.TextColor3 = Color3.new(1, 1, 1)
+    up.Font = Enum.Font.GothamBold
+    up.TextSize = 14
+    Instance.new("UICorner", up).CornerRadius = UDim.new(0, 5)
+
+    local step = (maxV - minV) / 20
+    dn.MouseButton1Click:Connect(function()
+        currentVal = math.max(minV, currentVal - step)
+        lbl.Text = L(labelKey) .. ": " .. (math.floor(currentVal * 10) / 10)
+        callback(currentVal)
+    end)
+    up.MouseButton1Click:Connect(function()
+        currentVal = math.min(maxV, currentVal + step)
+        lbl.Text = L(labelKey) .. ": " .. (math.floor(currentVal * 10) / 10)
+        callback(currentVal)
+    end)
+end
+
+local function sectionLabel(parent, key)
+    local lbl = Instance.new("TextLabel", parent)
+    lbl.Size = UDim2.new(1, -10, 0, 22)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Settings.Color2
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 10
+    lbl.TextXAlignment = Enum.TextXAlignment.Center
+    table.insert(TextRefs, {el = lbl, key = key, isSection = true})
+    lbl.Text = "── " .. L(key) .. " ──"
+end
+
+-- DİL SEÇİCİ (en üstte)
+sectionLabel(SettingsContent, "langSection")
+local langRow = Instance.new("Frame", SettingsContent)
+langRow.Size = UDim2.new(1, -10, 0, 28)
+langRow.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
+langRow.BorderSizePixel = 0
+Instance.new("UICorner", langRow).CornerRadius = UDim.new(0, 8)
+Instance.new("UIListLayout", langRow).FillDirection = Enum.FillDirection.Horizontal
+Instance.new("UIListLayout", langRow).Padding = UDim.new(0, 3)
+Instance.new("UIListLayout", langRow).HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local langCodes = {"tr", "en", "de", "fr", "es"}
+local langBtns = {}
+for _, code in ipairs(langCodes) do
+    local lb = Instance.new("TextButton", langRow)
+    lb.Size = UDim2.new(0, 48, 1, 0)
+    lb.BackgroundColor3 = (Settings.Language == code) and Settings.Color1 or Color3.fromRGB(35, 25, 50)
+    lb.Text = code:upper()
+    lb.TextColor3 = (Settings.Language == code) and Color3.fromRGB(30, 30, 40) or Color3.fromRGB(200, 195, 220)
+    lb.Font = Enum.Font.GothamBold
+    lb.TextSize = 11
+    Instance.new("UICorner", lb).CornerRadius = UDim.new(0, 5)
+    table.insert(langBtns, {btn = lb, code = code})
+
+    lb.MouseButton1Click:Connect(function()
+        Settings.Language = code
+        for _, l in ipairs(langBtns) do
+            if l.code == code then
+                l.btn.BackgroundColor3 = Settings.Color1
+                l.btn.TextColor3 = Color3.fromRGB(30, 30, 40)
+            else
+                l.btn.BackgroundColor3 = Color3.fromRGB(35, 25, 50)
+                l.btn.TextColor3 = Color3.fromRGB(200, 195, 220)
+            end
+        end
+        updateAllTexts()
+    end)
+end
+
+-- MOD
+sectionLabel(SettingsContent, "modeSection")
+local autoBtn = Instance.new("TextButton", SettingsContent)
+autoBtn.Size = UDim2.new(1, -10, 0, 40)
+autoBtn.BackgroundColor3 = Settings.AutoAdjust and Color3.fromRGB(35, 22, 55) or Color3.fromRGB(22, 17, 32)
+autoBtn.Text = ""
+autoBtn.BorderSizePixel = 0
+Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 8)
+local autoStroke = Instance.new("UIStroke", autoBtn)
+autoStroke.Thickness = 1
+autoStroke.Color = Settings.AutoAdjust and Settings.Color1 or Color3.fromRGB(45, 35, 60)
+
+local autoIcon = Instance.new("TextLabel", autoBtn)
+autoIcon.Size = UDim2.new(0, 30, 1, 0)
+autoIcon.Position = UDim2.new(0, 8, 0, 0)
+autoIcon.BackgroundTransparency = 1
+autoIcon.Text = Settings.AutoAdjust and "🔄" or "🎛"
+autoIcon.Font = Enum.Font.GothamBold
+autoIcon.TextSize = 16
+
+local autoTxt = Instance.new("TextLabel", autoBtn)
+autoTxt.Size = UDim2.new(1, -50, 1, 0)
+autoTxt.Position = UDim2.new(0, 42, 0, 0)
+autoTxt.BackgroundTransparency = 1
+autoTxt.TextColor3 = Settings.AutoAdjust and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 195, 220)
+autoTxt.Font = Enum.Font.GothamBold
+autoTxt.TextSize = 11
+autoTxt.TextXAlignment = Enum.TextXAlignment.Left
+regText(autoTxt, Settings.AutoAdjust and "autoOn" or "autoOff")
+
+autoBtn.MouseButton1Click:Connect(function()
+    Settings.AutoAdjust = not Settings.AutoAdjust
+    autoBtn.BackgroundColor3 = Settings.AutoAdjust and Color3.fromRGB(35, 22, 55) or Color3.fromRGB(22, 17, 32)
+    autoStroke.Color = Settings.AutoAdjust and Settings.Color1 or Color3.fromRGB(45, 35, 60)
+    autoIcon.Text = Settings.AutoAdjust and "🔄" or "🎛"
+    autoTxt.Text = L(Settings.AutoAdjust and "autoOn" or "autoOff")
+    autoTxt.TextColor3 = Settings.AutoAdjust and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 195, 220)
+    ApplyAutoSettings()
+end)
+
+-- HAREKET
+sectionLabel(SettingsContent, "moveSection")
+createSlider(SettingsContent, "speedBase", 16, 200, Settings.WalkSpeed, function(v) Settings.WalkSpeed = v end)
+createSlider(SettingsContent, "jumpBase", 50, 300, Settings.JumpPower, function(v) Settings.JumpPower = v end)
+
+-- HITBOX
+sectionLabel(SettingsContent, "hitboxSection")
+createSlider(SettingsContent, "hitboxBase", 1, 10, Settings.HitboxSize, function(v)
+    Settings.HitboxSize = v
+    updateHitboxSize()
+end)
+
+-- KAMERA
+sectionLabel(SettingsContent, "cameraSection")
+createSlider(SettingsContent, "maxZoom", 128, 500, LocalPlayer.CameraMaxZoomDistance, function(v) LocalPlayer.CameraMaxZoomDistance = v end)
+
+-- ARAYÜZ RENGİ (DÜZELTİLMİŞ)
+sectionLabel(SettingsContent, "themeSection")
+for _, preset in ipairs(ColorPresets) do
+    local pbtn = Instance.new("TextButton", SettingsContent)
+    pbtn.Size = UDim2.new(1, -10, 0, 34)
+    pbtn.BackgroundColor3 = Color3.fromRGB(28, 22, 40)
+    pbtn.Text = ""
+    pbtn.BorderSizePixel = 0
+    pbtn.AutoButtonColor = false
+    Instance.new("UICorner", pbtn).CornerRadius = UDim.new(0, 8)
+
+    local pStroke = Instance.new("UIStroke", pbtn)
+    pStroke.Thickness = 1
+    pStroke.Color = Color3.fromRGB(50, 40, 65)
+
+    -- Sol tarafta renk önizleme kutusu
+    local preview = Instance.new("Frame", pbtn)
+    preview.Size = UDim2.new(0, 22, 0, 22)
+    preview.Position = UDim2.new(0, 8, 0.5, -11)
+    preview.BackgroundColor3 = preset.c1
+    preview.BorderSizePixel = 0
+    Instance.new("UICorner", preview).CornerRadius = UDim.new(0, 5)
+
+    local pGrad = Instance.new("UIGradient", preview)
+    pGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, preset.c1),
+        ColorSequenceKeypoint.new(1, preset.c2)
+    }
+
+    local pStroke2 = Instance.new("UIStroke", preview)
+    pStroke2.Thickness = 1
+    pStroke2.Color = Color3.fromRGB(60, 50, 80)
+
+    -- Beyaz okunabilir yazı
+    local pLbl = Instance.new("TextLabel", pbtn)
+    pLbl.Size = UDim2.new(1, -40, 1, 0)
+    pLbl.Position = UDim2.new(0, 38, 0, 0)
+    pLbl.BackgroundTransparency = 1
+    pLbl.TextColor3 = Color3.fromRGB(240, 240, 250)
+    pLbl.Font = Enum.Font.GothamBold
+    pLbl.TextSize = 11
+    pLbl.TextXAlignment = Enum.TextXAlignment.Left
+    regText(pLbl, preset.key)
+
+    pbtn.MouseButton1Click:Connect(function()
+        Settings.Color1 = preset.c1
+        Settings.Color2 = preset.c2
+        Settings.Color3 = preset.c3
+        ApplyTheme()
+        for _, d in pairs(espData) do
+            if d.highlight and d.highlight.Parent then
+                d.highlight.FillColor = Settings.Color2
+                d.highlight.OutlineColor = Settings.Color2
+            end
+            if d.label and d.label.Parent then
+                d.label.TextColor3 = Settings.Color2
+            end
+        end
+    end)
+end
+
+-- ==================== MENÜ BUTONLARI ====================
+CreateToggle(CombatContent, "aimlock", "🎯", function(s) G.Aimlock = s end)
+CreateToggle(CombatContent, "esp", "👁️", function(s)
+    G.ESP = s
+    if s then refreshESP() else cleanAllESP() end
+end)
+CreateToggle(CombatContent, "infStamina", "🔋", function(s) G.InfStamina = s end)
+CreateToggle(CombatContent, "ghostWalk", "👻", function(s) G.GhostWalk = s end)
+
+CreateToggle(MoveContent, "speed", "⚡", function(s) G.Speed = s end)
+CreateToggle(MoveContent, "jump", "🦘", function(s) G.Jump = s end)
+
+CreateToggle(SettingsContent, "hitboxExpander", "📦", function(s)
+    G.Hitbox = s
+    if s then createHitbox() else removeHitbox() end
+end)
+
+-- ESP renk güncelleme
+task.spawn(function()
+    while true do
+        task.wait(3)
+        for _, d in pairs(espData) do
+            if d.highlight and d.highlight.Parent then
+                d.highlight.FillColor = Settings.Color2
+                d.highlight.OutlineColor = Settings.Color2
+            end
+            if d.label and d.label.Parent then
+                d.label.TextColor3 = Settings.Color2
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(5)
+        if Settings.AutoAdjust then ApplyAutoSettings() end
+    end
+end)
+
+print("✅ TSB NOVE HUB v13 yüklendi - Dil + Gizli Sızma + UI Fix + " .. DEVICE_NAME)
